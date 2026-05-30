@@ -5,15 +5,16 @@ from email.mime.multipart import MIMEMultipart
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-
-
-
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=[
+    "https://portifolio-frontend-d8s6.vercel.app",
+    "http://localhost:5173",
+    "http://localhost:3000"
+])
 
 # Config kutoka environment variables
 GMAIL_USER = os.environ.get("GMAIL_USER")
-GMAIL_PASSWORD = os.environ.get("GMAIL_PASSWORD")  # App Password, si password ya kawaida
+GMAIL_PASSWORD = os.environ.get("GMAIL_PASSWORD")
 
 @app.route("/", methods=["GET"])
 def home():
@@ -31,10 +32,9 @@ def contact():
         return jsonify({"success": False, "message": "Taarifa zote zinahitajika"}), 400
 
     try:
-        # Tengeneza email
         msg = MIMEMultipart()
         msg["From"] = GMAIL_USER
-        msg["To"] = GMAIL_USER  # Unapokea kwenye email yako mwenyewe
+        msg["To"] = GMAIL_USER
         msg["Subject"] = f"Portfolio Contact: {name}"
 
         body = f"""
@@ -48,7 +48,6 @@ Ujumbe:
         """
         msg.attach(MIMEText(body, "plain"))
 
-        # Tuma email
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
             server.login(GMAIL_USER, GMAIL_PASSWORD)
             server.sendmail(GMAIL_USER, GMAIL_USER, msg.as_string())
