@@ -1,7 +1,5 @@
 import os
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
@@ -12,8 +10,8 @@ CORS(app, origins=[
     "http://localhost:3000"
 ])
 
-GMAIL_USER = os.environ.get("SMTP_USER")
-GMAIL_PASSWORD = os.environ.get("SMTP_PASS")
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY")
+MAIL_TO = os.environ.get("MAIL_TO")
 
 @app.route("/", methods=["GET"])
 def home():
@@ -22,7 +20,6 @@ def home():
 @app.route("/contact", methods=["POST"])
 def contact():
     data = request.json
-
     name = data.get("name")
     email = data.get("email")
     message = data.get("message")
@@ -31,32 +28,28 @@ def contact():
         return jsonify({"success": False, "message": "Taarifa zote zinahitajika"}), 400
 
     try:
-        msg = MIMEMultipart()
-        msg["From"] = GMAIL_USER
-        msg["To"] = GMAIL_USER
-        msg["Subject"] = f"Portfolio Contact: {name}"
+        response = requests.post(
+            "https://api.resend.com/emails",
+            headers={
+                "Authorization": f"Bearer {RESEND_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "from": "onboarding@resend.dev",
+                "to": MAIL_TO,
+                "subject": f"Portfolio Contact: {name}",
+                "text": f"Jina: {name}\nBarua pepe: {email}\n\nUjumbe:\n{message}"
+            }
+        )
 
-        body = f"""
-Ujumbe mpya kutoka portfolio yako!
-
-Jina: {name}
-Barua pepe: {email}
-
-Ujumbe:
-{message}
-        """
-        msg.attach(MIMEText(body, "plain"))
-
-        with smtplib.SMTP("smtp.gmail.com", 587) as server:
-            server.ehlo()
-            server.starttls()
-            server.login(GMAIL_USER, GMAIL_PASSWORD)
-            server.sendmail(GMAIL_USER, GMAIL_USER, msg.as_string())
-
-        return jsonify({"success": True, "message": "Email imetumwa!"})
+        if response.status_code == 200:
+            return jsonify({"success": True, "message": "Email imetumwa!"})
+        else:
+            print(f"Resend error: {response.text}")
+            return jsonify({"success": False, "message": "Imeshindwa kutuma"}), 500
 
     except Exception as e:
-        print(f"SMTP Kosa: {e}")
+        print(f"Kosa: {e}")
         return jsonify({"success": False, "message": "Imeshindwa kutuma email"}), 500
 
 if __name__ == "__main__":
