@@ -13,8 +13,8 @@ CORS(app, origins=[
 ])
 
 # Config kutoka environment variables
-GMAIL_USER = os.environ.get("GMAIL_USER")
-GMAIL_PASSWORD = os.environ.get("GMAIL_PASSWORD")
+GMAIL_USER = os.environ.get("SMTP_USER")
+GMAIL_PASSWORD = os.environ.get("SMTP_PASS")
 
 @app.route("/", methods=["GET"])
 def home():
