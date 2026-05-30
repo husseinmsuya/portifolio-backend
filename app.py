@@ -12,7 +12,6 @@ CORS(app, origins=[
     "http://localhost:3000"
 ])
 
-# Config kutoka environment variables
 GMAIL_USER = os.environ.get("SMTP_USER")
 GMAIL_PASSWORD = os.environ.get("SMTP_PASS")
 
@@ -49,10 +48,11 @@ Ujumbe:
         msg.attach(MIMEText(body, "plain"))
 
         with smtplib.SMTP("smtp.gmail.com", 587) as server:
-    server.ehlo()
-    server.starttls()
-    server.login(GMAIL_USER, GMAIL_PASSWORD)
-    server.sendmail(GMAIL_USER, GMAIL_USER, msg.as_string())
+            server.ehlo()
+            server.starttls()
+            server.login(GMAIL_USER, GMAIL_PASSWORD)
+            server.sendmail(GMAIL_USER, GMAIL_USER, msg.as_string())
+
         return jsonify({"success": True, "message": "Email imetumwa!"})
 
     except Exception as e:
